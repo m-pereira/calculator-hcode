@@ -81,7 +81,7 @@ class CalcController {
         this.calc();
         break;
       case 'ponto':
-        this.addOperation('.');
+        this.addDot();
         break;
       case '0':
       case '1':
@@ -98,46 +98,6 @@ class CalcController {
       default:
         this.setError();
         break;
-    }
-  }
-
-  clearAll(){
-    this._operation = [];
-    this.displayCalc = 0;
-  }
-
-  clearEntry(){
-    this._operation.pop();
-    this.displayCalc = 0;
-  }
-
-  addOperation(value){
-    if (isNaN(this.getLastOperation())){
-      if(this.isOperator(value)){
-        this.setLastOperation(value);
-      } else if(isNaN(value)) {
-        // outra coisa
-      } else {
-        this.pushOperation(value);
-        this.setLastNumberToDisplay();
-      }
-    } else {
-      if (this.isOperator(value)) {
-        this.pushOperation(value);
-      } else {
-        let newValue = this.getLastOperation().toString() + value.toString();
-        this.setLastOperation(parseInt(newValue));
-        this.setLastNumberToDisplay();
-      }
-    }
-    console.log(this._operation);
-  }
-
-  pushOperation(value){
-    this._operation.push(value);
-
-    if (this._operation.length > 3) {
-      this.calc();
     }
   }
 
@@ -167,6 +127,61 @@ class CalcController {
       this._operation = [result];
 
       if (last) this._operation.push(last)
+    }
+
+    this.setLastNumberToDisplay();
+  }
+
+    clearAll(){
+    this._operation = [];
+    this._lastNumber = '';
+    this._lastOperator = '';
+
+    this.setLastNumberToDisplay();
+  }
+
+  clearEntry(){
+    this._operation.pop();
+    this.setLastNumberToDisplay();
+  }
+
+  addOperation(value){
+    if (isNaN(this.getLastOperation())){
+      if(this.isOperator(value)){
+        this.setLastOperation(value);
+      } else {
+        this.pushOperation(value);
+        this.setLastNumberToDisplay();
+      }
+    } else {
+      if (this.isOperator(value)) {
+        this.pushOperation(value);
+      } else {
+        let newValue = this.getLastOperation().toString() + value.toString();
+        this.setLastOperation(newValue);
+        this.setLastNumberToDisplay();
+      }
+    }
+    console.log(this._operation);
+  }
+
+  pushOperation(value){
+    this._operation.push(value);
+
+    if (this._operation.length > 3) {
+      this.calc();
+    }
+  }
+
+  addDot(){
+    let lastOperation = this.getLastOperation();
+
+    if (typeof lastOperation === 'string' && lastOperation.split('').indexOf('.') > -1) return;
+
+    if (this.isOperator(lastOperation) || !lastOperation){
+      this.pushOperation('0.');
+    } else {
+      this.setLastOperation(lastOperation.toString() + '.');
     }
 
     this.setLastNumberToDisplay();
