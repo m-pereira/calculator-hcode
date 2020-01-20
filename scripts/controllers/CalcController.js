@@ -1,5 +1,8 @@
 class CalcController {
   constructor(){
+    this._lastOperator = '';
+    this._lastNumber = '';
+
     this._operation = [];
     this._locale = 'pt-BR'
     this.displayCalcEl = document.querySelector("#display");
@@ -16,6 +19,8 @@ class CalcController {
     setInterval(()=>{
       this.setDisplayDateTime();  
     }, 1000);
+
+    this.setLastNumberToDisplay();
   }
 
   initButtonsEvents(){
@@ -103,6 +108,7 @@ class CalcController {
 
   clearEntry(){
     this._operation.pop();
+    this.displayCalc = 0;
   }
 
   addOperation(value){
@@ -136,33 +142,67 @@ class CalcController {
   }
 
   calc(){
-    if (isNaN(this.getLastOperation())){
-      let last = this._operation.pop();
-      let result = eval(this._operation.join(''));
+    let last = '';
 
-      this._operation = [result, last];
-      this.setLastNumberToDisplay();
-    } else {
-      let result = eval(this._operation.join(''));
-      this._operation = [result];
-      this.setLastNumberToDisplay();
+    this._lastOperator = this.getLastItem();
+
+    if (this._operation.length < 3){
+      let firstItem = this._operation[0];
+      this._operation = [firstItem, this._lastOperator, this._lastNumber];
     }
+
+    if (this._operation.length > 3){
+      last = this._operation.pop();
+      this._lastNumber = this.getResult();
+    } else if (this._operation.length == 3){
+      this._lastNumber = this.getLastItem(false);
+    }
+    
+    let result = this.getResult();
+
+    if (last == '%') {
+      result /= 100;
+      this._operation = [result]
+    } else {
+      this._operation = [result];
+
+      if (last) this._operation.push(last)
+    }
+
+    this.setLastNumberToDisplay();
   }
 
   setLastNumberToDisplay(){
-    let lastNumber;
+    let lastNumber = this.getLastItem(false);
+
+    if (!lastNumber) lastNumber = 0;
+
+    this.displayCalc = lastNumber;
+  }
+
+  getLastItem(isOperator = true){
+    let lastItem;
 
     for (let i = this._operation.length - 1; i >= 0; i--){
-      if (!this.isOperator(this._operation[i])){
-        lastNumber = this._operation[i];
+      if (this.isOperator(this._operation[i]) == isOperator){
+        lastItem = this._operation[i];
         break;
       }
     }
-    this.displayCalc = lastNumber;
+
+    if (!lastItem){
+      lastItem = (isOperator) ? this._lastOperator : this._lastNumber;
+    }
+
+    return lastItem;
   }
 
   getLastOperation(){
     return this._operation[this._operation.length - 1];
+  }
+
+  getResult(){
+    return eval(this._operation.join(''));
   }
 
   isOperator(value){
